@@ -1,0 +1,51 @@
+x-bot-env: &bot-env
+  TOKEN:       ${TOKEN}
+  DB_HOST:     ${DB_HOST}
+  DB_PORT:     ${DB_PORT}
+  DB_USER:     ${DB_USER}
+  DB_PASSWORD: ${DB_PASSWORD}
+  DB_NAME:     ${DB_NAME}
+
+x-db-env: &db-env
+  POSTGRES_USER:     ${DB_USER}
+  POSTGRES_PASSWORD: ${DB_PASSWORD}
+  POSTGRES_DB:       ${DB_NAME}
+
+services:
+  database:
+    image: postgres:17
+    container_name: database
+    restart: unless-stopped
+    environment:
+      <<: *db-env
+    command:
+      - postgres
+      - -p
+      - ${DB_PORT}
+    expose:
+      - "${DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -p ${DB_PORT}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${ENVIRONMENT}
+    container_name: bot
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      <<: *bot-env
+    depends_on:
+      database:
+        condition: service_healthy
+    
+volumes:
+  postgres_data:
