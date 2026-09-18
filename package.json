@@ -1,0 +1,28 @@
+{
+  "name": "coindealer",
+  "version": "1.0.0",
+  "description": "A competitive PvP game where players battle, trade, and flex their coins.",
+  "main": "dist/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AbolfazlPourisa/coindealer.git"
+  },
+  "keywords": [],
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/AbolfazlPourisa/coindealer/issues"
+  },
+  "homepage": "https://github.com/AbolfazlPourisa/coindealer#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
