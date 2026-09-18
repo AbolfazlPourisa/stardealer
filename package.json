@@ -9,7 +9,8 @@
     "watch": "tsx --watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "typecheck": "tsc -noEmit"
+    "typecheck": "tsc -noEmit",
+    "clean": "rm -r dist"
   },
   "repository": {
     "type": "git",
