@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx src/main.ts",
+    "watch": "tsx --watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
     "typecheck": "tsc -noEmit"
