@@ -24,6 +24,7 @@
   "homepage": "https://github.com/AbolfazlPourisa/coindealer#readme",
   "devDependencies": {
     "@types/node": "^26.6.1",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },
