@@ -1,0 +1,36 @@
+migrations:
+  - id: 1
+    name: functions
+    path: ./01_functions
+    files:
+      - 001_update_updated_at.sql
+
+  - id: 2
+    name: users
+    path: ./02_users
+    files:
+      - 001_users.sql
+      - 002_user_indexes.sql
+      - 003_user_triggers.sql
+
+  - id: 3
+    name: pvps
+    path: ./03_pvps
+    files:
+      - 001_pvps.sql
+      - 002_pvp_triggers.sql
+
+  - id: 4
+    name: transfers
+    path: ./04_transfers
+    files:
+      - 001_transfers.sql
+      - 002_transfer_triggers.sql
+
+  - id: 5
+    name: groups
+    path: ./05_groups
+    files:
+      - 001_groups.sql
+      - 002_group_users.sql
+      - 003_group_triggers.sql
