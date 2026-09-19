@@ -1,0 +1,3 @@
+start:
+  fa: "سلام {userId}"
+  en: "Hello {userId}"

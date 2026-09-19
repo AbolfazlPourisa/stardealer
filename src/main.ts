@@ -1,9 +1,11 @@
+import Config from "./config/config.js";
 import { Database } from "./database/connection.js"; 
 import { Migrations } from "./database/migrations.js";
-import Config from "./config/config.js";
+
+import { Messages } from "./i18n/messages.js";
 
 async function main() {
-    let migrations = new Migrations("./src/migrations");
+    const migrations = new Migrations("./src/migrations");
 
     let database = new Database(
         Config.dbHost,
@@ -16,6 +18,8 @@ async function main() {
     await database.connect();
     await database.test();
     await database.createTables(migrations.config);
+
+    const messages = new Messages("./src/i18n/messages.yaml");
 }
 
 main();
