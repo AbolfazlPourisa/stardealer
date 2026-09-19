@@ -1,3 +1,5 @@
+DROP TRIGGER IF EXISTS pvps_updated_at ON users;
+
 CREATE TRIGGER pvps_updated_at
     BEFORE UPDATE ON pvps
     FOR EACH ROW
