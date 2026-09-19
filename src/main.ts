@@ -1,8 +1,10 @@
 import Config from "./config/config.js";
 import { Database } from "./database/connection.js"; 
 import { Migrations } from "./database/migrations.js";
-
 import { Messages } from "./i18n/messages.js";
+import { initializeInfrastructure } from "./infrastructure/infrastructure.js";
+import { Bot } from "./bot/bot.js";
+import { config } from "dotenv";
 
 async function main() {
     const migrations = new Migrations("./src/migrations");
@@ -20,6 +22,16 @@ async function main() {
     await database.createTables(migrations.config);
 
     const messages = new Messages("./src/i18n/messages.yaml");
+
+    initializeInfrastructure(
+        database,
+        messages.messages
+    );
+
+    const bot = new Bot(Config.token);
+
+    bot.setHandlers();
+    await bot.start();
 }
 
 main();
