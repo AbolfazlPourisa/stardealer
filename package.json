@@ -28,6 +28,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "pg": "^8.23.0",
     "yaml": "^2.9.1"
   }
 }
