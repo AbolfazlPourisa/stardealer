@@ -4,7 +4,6 @@ import { Migrations } from "./database/migrations.js";
 import { Messages } from "./i18n/messages.js";
 import { initializeInfrastructure } from "./infrastructure/infrastructure.js";
 import { Bot } from "./bot/bot.js";
-import { config } from "dotenv";
 
 async function main() {
     const migrations = new Migrations("./src/migrations");
