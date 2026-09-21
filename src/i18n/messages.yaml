@@ -1,3 +1,21 @@
 start:
-  fa: "سلام {userId}"
-  en: "Hello {userId}"
+  fa: |
+    👋 سلام و خوش اومدی به ربات!
+
+    ⭐ هر ۲ ساعت با دستور /claim می‌تونی بین *۵- تا ۲۰+ استار* دریافت کنی!
+
+    🎮 با دستور /pvp می‌تونی توی گروه‌ها با بقیه رقابت کنی و شرط‌بندی کنی. یادت باشه:
+    🏆 امتیاز بازی به *برد و باخت‌هات* بستگی داره، نه تعداد استارهات!
+
+    🆘 برای مشاهده راهنما از دستور /help استفاده کن.
+
+  en: |
+    👋 Hello and welcome to the bot!
+
+    ⭐ Every 2 hours, use /claim to receive between *5- and 20+ Stars*!
+
+    🎮 Use /pvp in groups to compete and place bets against other players. Remember:
+    🏆 Your score depends on your *wins and losses*, not your number of Stars!
+
+    🆘 Use /help to view the guide.
+

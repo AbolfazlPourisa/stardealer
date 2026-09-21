@@ -10,8 +10,12 @@ export class Start implements Handler {
     async handler(ctx: Context) {
         const lang = ctx.lang;
 
-        ctx.reply(new I18n(Infrastructure.messages["start"]?.[lang] ?? "unknown", {
-            userId: `${ctx.from?.id}`
-        }).text);
+        ctx.reply(
+            new I18n(
+                Infrastructure.messages["start"]?.[lang]!,
+                {}
+            ).text
+        );
     }
 }
+
