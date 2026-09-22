@@ -19,3 +19,36 @@ start:
 
     🆘 Use /help to view the guide.
 
+claim:
+  fa: |
+    📊 *گزارش دریافت ستاره‌ها*
+
+    ✨ ستاره‌های دریافتی: {stars} ستاره
+    💰 موجودی قبلی: {oldStars} ستاره
+    📈 موجودی جدید: {newStars} ستاره
+
+    🎉 مبارکه! هر ۲ ساعت می‌تونی دوباره ستاره دریافت کنی!
+
+  en: |
+    📊 *Star Claim Report*
+
+    ✨ Stars claimed: {stars} stars
+    💰 Previous balance: {oldStars} stars
+    📈 New balance: {newStars} stars
+
+    🎉 Congratulations! You can claim stars again every 2 hours!
+
+claimRemaining:
+  fa: |
+    ⏳ هنوز برای دریافت ستاره‌ها زوده!
+
+    🕐 زمان باقی‌مانده: {remaining} دقیقه
+
+    🎁 بعد از پایان این زمان می‌تونی دوباره ستاره دریافت کنی.
+
+  en: |
+    ⏳ It's still too early to claim stars!
+
+    🕐 Remaining time: {remaining} minutes
+
+    🎁 You can claim stars again after this time.
