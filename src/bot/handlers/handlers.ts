@@ -1,3 +1,4 @@
+import { InlineKeyboard } from "grammy";
 import type { Context } from "../context.js";
 import { Infrastructure } from "../../infrastructure/infrastructure.js";
 import { I18n } from "../../i18n/i18n.js";
@@ -11,7 +12,7 @@ interface Handler {
 abstract class Command implements Handler {
     abstract handler(ctx: Context): Promise<void>;
 
-    protected async addUser(ctx: Context) {        
+    protected async addUser(ctx: Context): Promise<void> {        
         await Infrastructure.database.pool.query(
             `
                 INSERT INTO users(
@@ -56,7 +57,7 @@ abstract class Command implements Handler {
 }
 
 export class Start extends Command {
-    async handler(ctx: Context) {
+    async handler(ctx: Context): Promise<void> {
         const lang = ctx.lang;
 
         try {
@@ -69,7 +70,7 @@ export class Start extends Command {
             console.error(error);
         }
 
-        ctx.reply(
+        await ctx.reply(
             new I18n(
                 Infrastructure.messages["start"]?.[lang] ?? "Something went wrong",
                 {}
@@ -103,7 +104,7 @@ export class Claim extends Command {
         return result.rows[0]?.stars;
     }
 
-    async handler(ctx: Context) {
+    async handler(ctx: Context): Promise<void> {
         const lang = ctx.lang;
 
         try {
@@ -111,7 +112,7 @@ export class Claim extends Command {
         } catch (error) {
             console.error(error);
             
-            ctx.reply(
+            await ctx.reply(
                 "Something went wrong"
             );
 
@@ -145,22 +146,22 @@ export class Claim extends Command {
                 
                 const elapsed = Date.now() - user.rows[0].last_stars_claimed_at.getTime();
 
-                if (elapsed < 2 * 60 * 60 * 1000) {
-                    const remaining = Math.ceil(
-                        (2 * 60 * 60 * 1000 - elapsed) / (60 * 1000)
-                    );
+                // if (elapsed < 2 * 60 * 60 * 1000) {
+                //     const remaining = Math.ceil(
+                //         (2 * 60 * 60 * 1000 - elapsed) / (60 * 1000)
+                //     );
 
-                    ctx.reply(
-                        new I18n(
-                            Infrastructure.messages["claimRemaining"]?.[lang] ?? "Something went wrong",
-                            {
-                                remaining: String(remaining)
-                            }
-                        ).text
-                    );
+                //     await ctx.reply(
+                //         new I18n(
+                //             Infrastructure.messages["claimRemaining"]?.[lang] ?? "Something went wrong",
+                //             {
+                //                 remaining: String(remaining)
+                //             }
+                //         ).text
+                //     );
 
-                    return;
-                }
+                //     return;
+                // }
 
                 const starsClaimed = await this.claimStars(client, ctx);
 
@@ -177,6 +178,164 @@ export class Claim extends Command {
             });
         } catch (error) {
             console.error(error)
+            await ctx.reply(
+                "Something went wrong"
+            );
+        }
+    }
+}
+
+export class Pvp extends Command {
+    async handler(ctx: Context): Promise<void> {
+        const lang = ctx.lang;
+
+        try {
+            if (!await this.userExists(ctx)) await this.addUser(ctx);
+        } catch (error) {
+            console.error(error);
+            
+            await ctx.reply(
+                "Something went wrong"
+            );
+
+            return;
+        }
+
+        const args = ctx.message?.text?.split(" ")!;
+
+        if (args.length != 2) {
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["pvpInvalidArg"]?.[lang] ?? "Something went wrong",
+                    {}
+                ).text
+            );
+
+            return;
+        }
+
+        const amount = Number(args[1]);
+
+        if (Number.isNaN(amount)) {
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["pvpInvalidAmount"]?.[lang] ?? "Something went wrong",
+                    {}
+                ).text
+            );
+
+            return;
+        }
+
+        if (!Number.isInteger(amount)) {
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["pvpFloatAmount"]?.[lang] ?? "Something went wrong",
+                    {}
+                ).text
+            );
+
+            return;
+        }
+
+        if (amount < 1) {
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["pvpInvalidAmountRange"]?.[lang] ?? "Something went wrong",
+                    {}
+                ).text
+            );
+
+            return;
+        }
+
+        const pvpUuid = randomUUID();
+        
+        try {
+            await Infrastructure.database.transaction(async (client: PoolClient) => {
+                const user = await client.query<{
+                    uuid: string,
+                    stars: string
+                }>(
+                    `
+                        SELECT uuid, stars FROM users WHERE user_id = $1 
+                    `,
+                    [
+                        ctx.from?.id
+                    ]
+                );
+
+                if (Number(user.rows[0]?.stars) < amount) {
+                    await ctx.reply(
+                        new I18n(
+                            Infrastructure.messages["pvpInsufficientStars"]?.[lang] ?? "Something went wrong",
+                            {
+                                requiredStars: String(amount),
+                                stars: user.rows[0]?.stars ?? "unknown"
+                            }
+                        ).text
+                    );
+
+                    return;
+                }
+                
+                await client.query(
+                    `
+                        INSERT INTO pvps(
+                            uuid,
+                            creator_uuid,
+                            amount
+                        )
+                        VALUES(
+                            $1,
+                            $2,
+                            $3
+                        )
+                    `,
+                    [
+                        pvpUuid,
+                        user.rows[0]?.uuid,
+                        amount
+                    ]
+                );
+    
+                const keyboard = new InlineKeyboard()
+                    .text(
+                        new I18n(
+                            Infrastructure.messages["pvpAccept"]?.[lang] ?? "Something went wrong",
+                            {}
+                        ).text,
+                        `accept_pvp_${pvpUuid}`
+                    )
+                    .row()
+                    .text(
+                        new I18n(
+                            Infrastructure.messages["pvpCancel"]?.[lang] ?? "Something went wrong",
+                            {}
+                        ).text,
+                        `cancel_pvp_${pvpUuid}`
+                    )
+    
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["pvpChallenge"]?.[lang] ?? "Something went wrong",
+                        {
+                            userId: String(ctx.from?.id),
+                            firstName: ctx.from?.first_name!,
+                            amount: String(amount)
+                        }
+                    ).text,
+                    {
+                        parse_mode: "HTML",
+                        reply_markup: keyboard,
+                    }
+                );
+            });
+        } catch (error) {
+            console.error(error);
+            await ctx.reply(
+                "Something went wrong"
+            );
         }
     }
 }

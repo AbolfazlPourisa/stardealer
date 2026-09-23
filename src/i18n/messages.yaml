@@ -52,3 +52,101 @@ claimRemaining:
     🕐 Remaining time: {remaining} minutes
 
     🎁 You can claim stars again after this time.
+
+pvpInvalidArg:
+  fa: |
+    ❌ فرمت دستور PvP اشتباهه!
+
+    📌 استفاده صحیح:
+    /pvp <amount>
+
+    💡 مقدار موردنظر برای شرط رو بعد از دستور وارد کن.
+
+  en: |
+    ❌ Invalid PvP command format!
+
+    📌 Correct usage:
+    /pvp <amount>
+
+    💡 Enter the amount you want to bet after the command.
+
+pvpInvalidAmount:
+  fa: |
+    ❌ مقدار شرط واردشده معتبر نیست!
+
+    📌 استفاده صحیح:
+    /pvp <amount>
+
+    💡 مقدار شرط باید یک عدد معتبر باشه.
+
+  en: |
+    ❌ The bet amount is invalid!
+
+    📌 Correct usage:
+    /pvp <amount>
+
+    💡 The bet amount must be a valid number.
+
+pvpInvalidAmountRange:
+  fa: |
+    ❌ مقدار شرط باید حداقل ۱ ستاره باشه!
+
+    📌 استفاده صحیح:
+    /pvp <amount>
+
+    💡 مقدار شرط نمی‌تونه کمتر از ۱ باشه.
+
+  en: |
+    ❌ The bet amount must be at least 1 star!
+
+    📌 Correct usage:
+    /pvp <amount>
+
+    💡 The bet amount cannot be less than 1.
+
+pvpFloatAmount:
+  fa: |
+    😂 داداش ستاره‌ست، اعشار که نداریم!
+
+    ⭐ مقدار شرط باید یه عدد کامل باشه.
+    📌 مثلاً: /pvp 10
+
+  en: |
+    😂 Bro, they're stars, not decimals!
+
+    ⭐ The bet amount must be a whole number.
+    📌 Example: /pvp 10
+
+pvpChallenge:
+  fa: |
+    🎲 شرط جدید
+
+    👤 <a href="tg://user?id={userId}">{firstName}</a> چت رو به مبلغ ⭐ {amount} به چالش کشید!
+    ⚔️ برای شرکت در رقابت، روی دکمه «قبول شرط» کلیک کن.
+
+  en: |
+    🎲 New Bet
+
+    👤 <a href="tg://user?id={userId}">{firstName}</a> challenged the chat to a ⭐ {amount} bet!
+    ⚔️ Click «Accept Bet» to join the competition.
+
+pvpAccept:
+  fa: "⚔️ قبول شرط"
+  en: "⚔️ Accept Bet"
+
+pvpCancel:
+  fa: "❌ لغو شرط (توسط ایجاد کننده)"
+  en: "❌ Cancel Bet (Creator Only)"
+
+pvpInsufficientStars:
+  fa: |
+    ⭐ ستاره کافی ندارید!
+
+    💰 مقدار مورد نیاز: {requiredStars}
+    ⭐ موجودی شما: {stars}
+
+  en: |
+    ⭐ You don't have enough Stars!
+
+    💰 Required: {requiredStars}
+    ⭐ Your balance: {stars}
