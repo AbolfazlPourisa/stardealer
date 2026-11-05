@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import type { Context } from "../context.js";
 import { Infrastructure } from "../../infrastructure/infrastructure.js";
 import { I18n } from "../../i18n/i18n.js";
-import type { PoolClient } from "pg";
+import { type PoolClient } from "pg";
 import { randomUUID } from "node:crypto";
 
 interface Handler {
@@ -18,6 +18,7 @@ abstract class Command implements Handler {
                 INSERT INTO users(
                     uuid,
                     user_id,
+                    username,
                     first_name,
                     stars
                 )
@@ -25,13 +26,15 @@ abstract class Command implements Handler {
                     $1,
                     $2,
                     $3,
+                    $4,
                     0
                 )
             `,
             [
                 randomUUID(),
                 ctx.from?.id,
-                ctx.from?.first_name
+                ctx.from?.first_name,
+                ctx.from?.username
             ]
         );
     }
@@ -54,6 +57,33 @@ abstract class Command implements Handler {
 
         return result.rows[0]?.exists ?? false;
     }
+
+    protected async syncUser(ctx: Context): Promise<void> {
+        await Infrastructure.database.pool.query(
+            `
+                INSERT INTO users (
+                    uuid,
+                    user_id,
+                    username,
+                    first_name,
+                    stars
+                )
+                VALUES (
+                    $1, $2, $3, $4, 0
+                )
+                ON CONFLICT (user_id)
+                DO UPDATE SET
+                    username = EXCLUDED.username,
+                    first_name = EXCLUDED.first_name
+            `,
+            [
+                randomUUID(),
+                ctx.from!.id,
+                ctx.from!.username ?? null,
+                ctx.from!.first_name
+            ]
+        );
+    }
 }
 
 export class Start extends Command {
@@ -61,21 +91,17 @@ export class Start extends Command {
         const lang = ctx.lang;
 
         try {
-            const userExists = await this.userExists(ctx);
+            await this.syncUser(ctx);
 
-            if (!userExists) {
-                await this.addUser(ctx);
-            }
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["start"]?.[lang] ?? "Something went wrong",
+                    {}
+                ).text
+            );
         } catch (error) {
             console.error(error);
         }
-
-        await ctx.reply(
-            new I18n(
-                Infrastructure.messages["start"]?.[lang] ?? "Something went wrong",
-                {}
-            ).text
-        );
     }
 }
 
@@ -108,18 +134,8 @@ export class Claim extends Command {
         const lang = ctx.lang;
 
         try {
-            if (!await this.userExists(ctx)) await this.addUser(ctx);
-        } catch (error) {
-            console.error(error);
-            
-            await ctx.reply(
-                "Something went wrong"
-            );
+            await this.syncUser(ctx);
 
-            return;
-        }
-
-        try {
             await Infrastructure.database.transaction(async (client: PoolClient) => {
                 const user = await client.query<{
                     last_stars_claimed_at: Date;
@@ -186,20 +202,306 @@ export class Claim extends Command {
 }
 
 export class Pvp extends Command {
-    async handler(ctx: Context): Promise<void> {
+    async cancelPvpHandler(ctx: Context): Promise<void> {
         const lang = ctx.lang;
 
         try {
-            if (!await this.userExists(ctx)) await this.addUser(ctx);
-        } catch (error) {
-            console.error(error);
-            
-            await ctx.reply(
-                "Something went wrong"
-            );
+            await this.syncUser(ctx);
 
-            return;
+            if (!Array.isArray(ctx.match)) {
+    
+                return;
+            }
+
+            const pvpId = ctx.match[1];
+
+            await Infrastructure.database.transaction(async (client: PoolClient) => {
+                const result = await client.query<{
+                    creator_uuid: string
+                    pvp_status: "pending" | "canceled" | "finished"
+                    user_uuid: string
+                }>(
+                    `
+                        SELECT
+                            pvps.creator_uuid,
+                            pvps.pvp_status,
+                            
+                            u.uuid AS user_uuid
+                        FROM pvps
+                        JOIN users u
+                            ON u.uuid = pvps.creator_uuid
+                        where pvps.uuid = $1
+                        FOR UPDATE OF pvps
+                    `,
+                    [
+                        pvpId
+                    ]
+                );
+
+                const pvp = result.rows[0]
+
+                if (!pvp) {
+                    await ctx.editMessageText(
+                        new I18n(
+                            Infrastructure.messages["pvpNotFound"]?.[lang] ?? "Something went wrong",
+                            {}
+                        ).text
+                    );
+
+                    return;
+                }
+
+                if (pvp.creator_uuid === pvp.user_uuid) {
+                    await ctx.answerCallbackQuery(
+                        {
+                            text: new I18n(
+                                Infrastructure.messages["pvpCancelUnauthorized"]?.[lang] ?? "Something went wrong",
+                                {
+                                }
+                            ).text,
+                            show_alert: true
+                        }
+                    );
+
+                    return;
+                }
+
+                if (pvp.pvp_status !== "pending") {
+                    await ctx.editMessageText(
+                        new I18n(
+                            Infrastructure.messages["pvpUnavailable"]?.[lang] ?? "Something went wrong",
+                            {
+                            }
+                        ).text,
+                    );
+
+                    return;
+                }
+
+                await client.query(
+                    `
+                        UPDATE pvps
+                        SET
+                            pvp_status = 'canceled',
+                            canceled_at = NOW()
+                        WHERE uuid = $1
+                    `,
+                    [
+                        pvpId
+                    ]
+                );
+
+                await ctx.editMessageText(
+                    new I18n(
+                        Infrastructure.messages["pvpExpired"]?.[lang] ?? "Something went wrong",
+                        {
+                        }
+                    ).text,
+                );
+            });
+        } catch (error) {
+            console.error(error)
+            await ctx.answerCallbackQuery({
+                text: "Something went wrong",
+                show_alert: true
+            });
         }
+    }
+
+    async acceptPvpHandler(ctx: Context): Promise<void> {
+        const lang = ctx.lang;
+
+        try {
+            await this.syncUser(ctx);
+
+            if (!Array.isArray(ctx.match)) {
+    
+                return;
+            }
+    
+            const pvpId = ctx.match[1];
+
+            Infrastructure.database.transaction(async (client: PoolClient) => {
+                const result = await client.query<{
+                    amount: string,
+                    pvp_status: "pending" | "canceled" | "finished" 
+                    
+                    creator_uuid: string
+                    creator_user_id: string
+                    creator_first_name: string | null
+                    creator_stars: string
+
+                    acceptor_uuid: string
+                    acceptor_user_id: string
+                    acceptor_first_name: string | null
+                    acceptor_stars: string
+                }>(
+                    `
+                        SELECT 
+                            pvps.amount,
+                            pvps.pvp_status,
+
+                            creator.uuid AS creator_uuid,
+                            creator.user_id AS creator_user_id,
+                            creator.first_name AS creator_first_name,
+                            creator.stars AS creator_stars,
+                            
+                            acceptor.uuid AS acceptor_uuid,
+                            acceptor.user_id AS acceptor_user_id,
+                            acceptor.first_name AS acceptor_first_name,
+                            acceptor.stars AS acceptor_stars
+                        
+                        FROM pvps
+                        JOIN users creator
+                            ON creator.uuid = pvps.creator_uuid
+                        JOIN users acceptor
+                            ON acceptor.user_id = $1
+                        WHERE pvps.uuid = $2
+                        FOR UPDATE
+                    `,
+                    [
+                        ctx.from!.id,
+                        pvpId
+                    ]
+                );
+
+                const pvp = result.rows[0];
+
+                if (!pvp) {
+                    await ctx.editMessageText(
+                        new I18n(
+                            Infrastructure.messages["pvpNotFound"]?.[lang] ?? "Something went wrong",
+                            {}
+                        ).text
+                    );
+
+                    return;
+                }
+
+                if (pvp.pvp_status != "pending") {
+                    await ctx.editMessageText(
+                        new I18n(
+                            Infrastructure.messages["pvpUnavailable"]?.[lang] ?? "Something went wrong",
+                            {}
+                        ).text,                    
+                    );
+
+                    return;
+                }
+
+                if (pvp.creator_user_id === pvp.acceptor_user_id) {
+                    await ctx.answerCallbackQuery(
+                        {
+                            text: new I18n(
+                                Infrastructure.messages["pvpSelf"]?.[lang] ?? "Something went wrong",
+                                {}
+                            ).text,
+                            show_alert: true
+                        }
+                    );
+
+                    return;
+                }
+
+                if (Number(pvp.acceptor_stars) < Number(pvp.amount)) {
+                    await ctx.answerCallbackQuery(
+                        {
+                            text: new I18n(
+                                Infrastructure.messages["pvpAcceptorInsufficientStars"]?.[lang] ?? "Something went wrong",
+                                {
+                                    stars: pvp.acceptor_stars,
+                                    requiredStars: pvp.amount
+                                }
+                            ).text,
+                            show_alert: true
+                        }
+                    );
+
+                    return;
+                }
+
+                if (Number(pvp.creator_stars) < Number(pvp.amount)) {
+                    await ctx.answerCallbackQuery(
+                        {
+                            text: new I18n(
+                                Infrastructure.messages["pvpCreatorInsufficientStars"]?.[lang] ?? "Something went wrong",
+                                {
+                                    stars: pvp.creator_stars,
+                                    requiredStars: pvp.amount
+                                }
+                            ).text,
+                            show_alert: true
+                        }
+                    );
+
+                    return;
+                }
+
+                const creator = {
+                    uuid: pvp.creator_uuid,
+                    userId: pvp.creator_user_id,
+                    firstName: pvp.creator_first_name,
+                    stars: pvp.creator_stars
+                };
+
+                const acceptor = {
+                    uuid: pvp.acceptor_uuid,
+                    userId: pvp.acceptor_user_id,
+                    firstName: pvp.acceptor_first_name,
+                    stars: pvp.acceptor_stars
+                };
+
+                const [winner, loser] = Math.random() < 0.5
+                    ? [creator, acceptor]
+                    : [acceptor, creator];
+
+                await client.query(
+                    `
+                        UPDATE pvps
+                        SET
+                            acceptor_uuid = $1,
+                            pvp_status = 'finished',
+                            winner_uuid = $2,
+                            loser_uuid = $3,
+                            accepted_at = NOW()
+                        WHERE uuid = $4
+                    `,
+                    [
+                        acceptor.uuid,
+                        winner.uuid,
+                        loser.uuid,
+                        pvpId
+                    ]
+                );
+                
+                await ctx.editMessageText(
+                    new I18n(
+                    Infrastructure.messages["pvpResult"]?.[lang] ?? "Something went wrong",
+                        {
+                            amount: pvp.amount,
+                            winnerId: winner.userId,
+                            winnerName: winner.firstName ?? "unknown",
+                            winnerOldStars: winner.stars,
+                            winnerNewStars: String(Number(winner.stars) + Number(pvp.amount)),
+                            loserId: loser.userId,
+                            loserName: loser.firstName ?? "unknown",
+                            loserOldStars: loser.stars,
+                            loserNewStars: String(Number(loser.stars) - Number(pvp.amount)),
+                        }
+                    ).text
+                );
+            });
+        } catch (error) {
+            console.error(error)
+            await ctx.answerCallbackQuery({
+                text: "Something went wrong",
+                show_alert: true
+            });
+        }
+    }
+
+    async handler(ctx: Context): Promise<void> {
+        const lang = ctx.lang;
 
         const args = ctx.message?.text?.split(" ")!;
 
@@ -252,13 +554,15 @@ export class Pvp extends Command {
         const pvpUuid = randomUUID();
         
         try {
+            await this.syncUser(ctx);
+
             await Infrastructure.database.transaction(async (client: PoolClient) => {
                 const user = await client.query<{
                     uuid: string,
                     stars: string
                 }>(
                     `
-                        SELECT uuid, stars FROM users WHERE user_id = $1 
+                        SELECT uuid, stars FROM users WHERE user_id = $1 FOR UPDATE 
                     `,
                     [
                         ctx.from?.id

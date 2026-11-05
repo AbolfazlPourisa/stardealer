@@ -150,3 +150,111 @@ pvpInsufficientStars:
 
     💰 Required: {requiredStars}
     ⭐ Your balance: {stars}
+
+pvpNotFound:
+  fa: |
+    ❌ این PVP وجود ندارد یا دیگر در دسترس نیست.
+
+  en: |
+    ❌ This PVP does not exist or is no longer available.
+
+pvpSelf:
+  fa: |
+    ❌ نمی‌توانید با خودتان شرط ببندید!
+
+  en: |
+    ❌ You can't bet against yourself!
+
+pvpAcceptorInsufficientStars:
+  fa: |
+    ⭐ استار کافی ندارید!
+
+    💰 مقدار مورد نیاز: {requiredStars}
+    ⭐ موجودی شما: {stars}
+
+  en: |
+    ⭐ You don't have enough Stars!
+
+    💰 Required: {requiredStars}
+    ⭐ Your balance: {stars}
+
+pvpCreatorInsufficientStars:
+  fa: |
+    ⭐ سازنده استار کافی ندارد!
+
+    💰 مقدار مورد نیاز: {requiredStars}
+    ⭐ موجودی سازنده: {stars}
+
+  en: |
+    ⭐ The creator doesn't have enough Stars!
+
+    💰 Required: {requiredStars}
+    ⭐ Creator's balance: {stars}
+  
+pvpUnavailable:
+  fa: |
+    ❌ این شرط منقضی شده یا قبلاً انجام شده است.
+
+  en: |
+    ❌ This PVP has expired or has already been completed.
+
+pvpCancelUnauthorized:
+  fa: |
+    ❌ شما اجازه لغو این شرط را ندارید!
+
+    🔒 فقط سازنده شرط می‌تواند آن را لغو کند.
+
+  en: |
+    ❌ You are not allowed to cancel this bet!
+
+    🔒 Only the creator of this bet can cancel it.
+
+pvpExpired:
+  fa: |
+    ⏳ این شرط با موفقیت منقضی شد!
+
+    ❌ دیگر امکان قبول کردن این شرط وجود ندارد.
+
+  en: |
+    ⏳ This bet has successfully expired!
+
+    ❌ This bet can no longer be accepted.
+
+pvpResult:
+  fa: |
+    🏆 *نتیجه رقابت PvP*
+
+    🎲 مبلغ شرط: ⭐ {amount} ستاره
+
+    🥇 *برنده:*
+    👤 <a href="tg://user?id={winnerId}">{winnerName}</a>
+    💰 موجودی قبلی: {winnerOldStars} ستاره
+    📈 موجودی جدید: {winnerNewStars} ستاره
+    🎉 سود: +{amount} ستاره
+
+    🥈 *بازنده:*
+    👤 <a href="tg://user?id={loserId}">{loserName}</a>
+    💰 موجودی قبلی: {loserOldStars} ستاره
+    📉 موجودی جدید: {loserNewStars} ستاره
+    💸 ضرر: -{amount} ستاره
+
+    ⚔️ رقابت به پایان رسید!
+
+  en: |
+    🏆 *PvP Match Result*
+
+    🎲 Bet Amount: ⭐ {amount} Stars
+
+    🥇 *Winner:*
+    👤 <a href="tg://user?id={winnerId}">{winnerName}</a>
+    💰 Previous Balance: {winnerOldStars} Stars
+    📈 New Balance: {winnerNewStars} Stars
+    🎉 Profit: +{amount} Stars
+
+    🥈 *Loser:*
+    👤 <a href="tg://user?id={loserId}">{loserName}</a>
+    💰 Previous Balance: {loserOldStars} Stars
+    📉 New Balance: {loserNewStars} Stars
+    💸 Loss: -{amount} Stars
+
+    ⚔️ The match has ended!
