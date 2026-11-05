@@ -162,22 +162,22 @@ export class Claim extends Command {
                 
                 const elapsed = Date.now() - user.rows[0].last_stars_claimed_at.getTime();
 
-                // if (elapsed < 2 * 60 * 60 * 1000) {
-                //     const remaining = Math.ceil(
-                //         (2 * 60 * 60 * 1000 - elapsed) / (60 * 1000)
-                //     );
+                if (elapsed < 2 * 60 * 60 * 1000) {
+                    const remaining = Math.ceil(
+                        (2 * 60 * 60 * 1000 - elapsed) / (60 * 1000)
+                    );
 
-                //     await ctx.reply(
-                //         new I18n(
-                //             Infrastructure.messages["claimRemaining"]?.[lang] ?? "Something went wrong",
-                //             {
-                //                 remaining: String(remaining)
-                //             }
-                //         ).text
-                //     );
+                    await ctx.reply(
+                        new I18n(
+                            Infrastructure.messages["claimRemaining"]?.[lang] ?? "Something went wrong",
+                            {
+                                remaining: String(remaining)
+                            }
+                        ).text
+                    );
 
-                //     return;
-                // }
+                    return;
+                }
 
                 const starsClaimed = await this.claimStars(client, ctx);
 
