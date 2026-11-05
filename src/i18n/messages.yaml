@@ -258,3 +258,24 @@ pvpResult:
     💸 Loss: -{amount} Stars
 
     ⚔️ The match has ended!
+
+stats:
+  fa: |
+    📊 *آمار حساب کاربری*
+
+    👤 نام کاربر: <a href="tg://user?id={userId}">{firstName}</a>
+    🆔 شناسه کاربری: `{userId}`
+
+    ⭐ موجودی استار: {stars}
+
+    ⏳ زمان تا دریافت استار بعدی: {remaining} دقیقه
+
+  en: |
+    📊 *Account Statistics*
+
+    👤 Username: <a href="tg://user?id={userId}">{firstName}</a>
+    🆔 User ID: `{userId}`
+
+    ⭐ Star Balance: {stars}
+
+    ⏳ Time Until Next Claim: {remaining} minutes

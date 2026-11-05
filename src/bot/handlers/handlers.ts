@@ -58,7 +58,20 @@ abstract class Command implements Handler {
         return result.rows[0]?.exists ?? false;
     }
 
-    protected async syncUser(ctx: Context): Promise<void> {
+    protected async syncUser(
+        ctx: Context,
+        user?: {
+            id: number,
+            username: string | undefined,
+            firstName: string | undefined
+        }
+    ): Promise<void> {
+        const data = user ?? {
+            id: ctx.from?.id,
+            username: ctx.from?.username,
+            firstName: ctx.from?.first_name
+        };
+
         await Infrastructure.database.pool.query(
             `
                 INSERT INTO users (
@@ -78,9 +91,9 @@ abstract class Command implements Handler {
             `,
             [
                 randomUUID(),
-                ctx.from!.id,
-                ctx.from!.username ?? null,
-                ctx.from!.first_name
+                data.id,
+                data.username,
+                data.firstName
             ]
         );
     }
@@ -640,6 +653,68 @@ export class Pvp extends Command {
             await ctx.reply(
                 "Something went wrong"
             );
+        }
+    }
+}
+
+export class Stats extends Command {
+    async handler(ctx: Context): Promise<void> {
+        const lang = ctx.lang;
+        
+        try {
+            await this.syncUser(ctx);
+
+            const message = ctx.message?.reply_to_message ?? ctx.message;
+
+            await this.syncUser(ctx, {
+                id: message!.from!.id,
+                username: message?.from?.username,
+                firstName: message?.from?.first_name
+            });
+
+            const result = await Infrastructure.database.pool.query<{
+                user_id: string,
+                first_name: string | null,
+                stars: string,
+                last_stars_claimed_at: Date
+            }>(
+                `
+                    SELECT 
+                        user_id,
+                        first_name,
+                        stars,
+                        last_stars_claimed_at
+                    FROM users
+                    WHERE user_id = $1
+                `,
+                [
+                    message?.from?.id
+                ]
+            );
+            
+            const user = result.rows[0];
+
+            if (!user) {
+                throw new Error("User does not exsit");
+            }
+
+            await ctx.reply(
+                new I18n(
+                    Infrastructure.messages["stats"]?.[lang] ?? "Something went wrong",
+                    {
+                        userId: user.user_id,
+                        firstName: user.first_name ?? "unknown",
+                        stars: user.stars,
+                        remaining: String(Math.max(0, Math.ceil(
+                            (2 * 60 * 60 * 1000 -
+                            (Date.now() - user.last_stars_claimed_at.getTime())) / 60000
+                        )))
+                    }
+                ).text
+            );
+        } catch (error) {
+            console.error(error);
+            await ctx.reply("Something went wrong");
         }
     }
 }
