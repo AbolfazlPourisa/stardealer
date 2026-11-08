@@ -17,4 +17,12 @@ export interface Variables {
     winnerName?:        string
     loserId?:           string
     loserName?:         string
+    giverId?:           string
+    giverName?:         string
+    giverOldStars?:     string
+    giverNewStars?:     string
+    receiverId?:        string
+    receiverName?:      string
+    receiverOldStars?:  string
+    receiverNewStars?:  string
 }

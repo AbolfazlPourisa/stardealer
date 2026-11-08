@@ -279,3 +279,129 @@ stats:
     ⭐ Star Balance: {stars}
 
     ⏳ Time Until Next Claim: {remaining} minutes
+
+giveReplyRequired:
+  fa: |
+    ❌ برای استفاده از دستور Give باید به پیام کاربر موردنظر ریپلای کنید!
+
+    💡 ابتدا روی پیام شخص موردنظر Reply بزنید و سپس دستور Give را ارسال کنید.
+
+  en: |
+    ❌ You must reply to a user's message to use the Give command!
+
+    💡 First, reply to the message of the user you want to send Stars to, then use the Give command.
+
+giveInvalidAmount:
+  fa: |
+    ❌ مقدار واردشده معتبر نیست!
+
+    ⭐ مقدار استار باید یک عدد معتبر و صحیح باشه.
+    📌 مثال: /give 10
+
+  en: |
+    ❌ The specified amount is invalid!
+
+    ⭐ The Star amount must be a valid whole number.
+    📌 Example: /give 10
+
+giveInvalidArg:
+  fa: |
+    ❌ آرگومان‌های واردشده معتبر نیستند!
+
+    📌 استفاده صحیح:
+    /give <amount>
+
+    💡 دستور رو با فرمت صحیح و مقدار موردنظر وارد کنید.
+
+  en: |
+    ❌ Invalid command arguments!
+
+    📌 Correct usage:
+    /give <amount>
+
+    💡 Please use the correct command format and specify the desired amount.
+
+giveFloatAmount:
+  fa: |
+    😂 استار که اعشاری نیست!
+
+    ⭐ مقدار استار باید یک عدد کامل باشه.
+    📌 مثلاً: /give 10
+
+  en: |
+    😂 Stars aren't decimals!
+
+    ⭐ The Star amount must be a whole number.
+    📌 Example: /give 10
+
+giveInvalidAmountRange:
+  fa: |
+    ❌ مقدار استار باید حداقل ۱ باشه!
+
+    ⭐ نمی‌تونی کمتر از ۱ استار ارسال کنی.
+    📌 مثلاً: /give 10
+
+  en: |
+    ❌ The Star amount must be at least 1!
+
+    ⭐ You cannot send less than 1 Star.
+    📌 Example: /give 10
+
+giveSelf:
+  fa: |
+    😂 می‌خوای به خودت استار بدی؟!
+
+    ⭐ برای انتقال استار باید به پیام یه کاربر دیگه ریپلای کنی.
+
+  en: |
+    😂 Trying to give Stars to yourself?!
+
+    ⭐ You must reply to another user's message to transfer Stars.
+
+giveInsufficientStars:
+  fa: |
+    ⭐ استار کافی برای انتقال ندارید!
+
+    💰 مقدار موردنیاز: {requiredStars} ستاره
+    ⭐ موجودی شما: {stars} ستاره
+
+  en: |
+    ⭐ You don't have enough Stars to make this transfer!
+
+    💰 Required amount: {requiredStars} Stars
+    ⭐ Your balance: {stars} Stars
+
+giveResult:
+  fa: |
+    💸 *گزارش انتقال استار*
+
+    👤 *فرستنده:*
+    <a href="tg://user?id={giverId}">{giverName}</a>
+    💰 موجودی قبلی: {giverOldStars} استار
+    📉 موجودی جدید: {giverNewStars} استار
+    💸 مقدار انتقال: -{amount} استار
+
+    👤 *گیرنده:*
+    <a href="tg://user?id={receiverId}">{receiverName}</a>
+    💰 موجودی قبلی: {receiverOldStars} استار
+    📈 موجودی جدید: {receiverNewStars} استار
+    🎉 مقدار دریافتی: +{amount} استار
+
+    ✅ انتقال استار با موفقیت انجام شد!
+
+  en: |
+    💸 *Star Transfer Report*
+
+    👤 *Sender:*
+    <a href="tg://user?id={giverId}">{giverName}</a>
+    💰 Previous Balance: {giverOldStars} Stars
+    📉 New Balance: {giverNewStars} Stars
+    💸 Transferred: -{amount} Stars
+
+    👤 *Receiver:*
+    <a href="tg://user?id={receiverId}">{receiverName}</a>
+    💰 Previous Balance: {receiverOldStars} Stars
+    📈 New Balance: {receiverNewStars} Stars
+    🎉 Amount Received: +{amount} Stars
+
+    ✅ Stars have been transferred successfully!

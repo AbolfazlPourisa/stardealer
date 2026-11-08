@@ -4,6 +4,8 @@ import { Infrastructure } from "../../infrastructure/infrastructure.js";
 import { I18n } from "../../i18n/i18n.js";
 import { type PoolClient } from "pg";
 import { randomUUID } from "node:crypto";
+import { SourceMap } from "node:module";
+import { stringTag } from "yaml/util";
 
 interface Handler {
     handler(ctx: Context): Promise<void>;
@@ -666,8 +668,11 @@ export class Stats extends Command {
 
             const message = ctx.message?.reply_to_message ?? ctx.message;
 
+            if (!message?.from) 
+                    return;
+
             await this.syncUser(ctx, {
-                id: message!.from!.id,
+                id: message.from.id,
                 username: message?.from?.username,
                 firstName: message?.from?.first_name
             });
@@ -712,6 +717,164 @@ export class Stats extends Command {
                     }
                 ).text
             );
+        } catch (error) {
+            console.error(error);
+            await ctx.reply("Something went wrong");
+        }
+    }
+}
+
+export class Give extends Command {
+    async handler(ctx: Context): Promise<void> {
+        const lang = ctx.lang;
+        
+        try {
+            await this.syncUser(ctx);
+
+            const args = ctx.message?.text?.split(" ")!;
+
+            if (args.length != 2) {
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveInvalidArg"]?.[lang] ?? "Something went wrong",
+                        {
+
+                        }
+                    ).text
+                );
+
+                return;
+            }
+
+            if (!ctx.message?.reply_to_message) {
+                await ctx.reply(
+                    new I18n(
+                    Infrastructure.messages["giveReplyRequired"]?.[lang] ?? "Something went wrong",
+                    {
+                    }
+                ).text
+                );
+
+                return;
+            }
+
+            const amount = Number(args[1]);
+
+            if (Number.isNaN(amount)) {
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveInvalidAmount"]?.[lang] ?? "Something went wrong",
+                        {}
+                    ).text
+                );
+
+                return;
+            }
+
+            if (!Number.isInteger(amount)) {
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveFloatAmount"]?.[lang] ?? "Something went wrong",
+                        {}
+                    ).text
+                );
+
+                return;
+            }
+
+            if (amount < 1) {
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveInvalidAmountRange"]?.[lang] ?? "Something went wrong",
+                        {}
+                    ).text
+                );
+
+                return;
+            }
+
+            if (ctx.message.reply_to_message.from?.id === ctx.from?.id) {
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveSelf"]?.[lang] ?? "Something went wrong",
+                        {}
+                    ).text
+                );
+
+                return;
+            }
+
+            await Infrastructure.database.transaction(async (client: PoolClient) => {
+                const result = await client.query<{
+                    giver_stars: string
+                    receiver_stars: string
+                }>(
+                    `   
+                        SELECT 
+                            g.stars AS giver_stars,
+                            r.stars AS receiver_stars
+                        FROM users g
+                        JOIN users r ON r.user_id = $2
+                        WHERE g.user_id = $1
+                        FOR UPDATE OF g, r 
+                    `,
+                    [
+                        ctx.from?.id,
+                        ctx.message?.reply_to_message?.from?.id
+                    ]
+                );
+
+                const users = result.rows[0];
+
+                if (!users)
+                    throw new Error("User does not exsit");
+
+                if (Number(users.giver_stars) < amount) {
+                    await ctx.reply(
+                        new I18n(
+                            Infrastructure.messages["giveInsufficientStars"]?.[lang] ?? "Something went wrong",
+                            {
+                                requiredStars: String(amount),
+                                stars: users.giver_stars
+                            }
+                        ).text
+                    )
+
+                    return;
+                }
+                
+                await client.query(
+                    `
+                        UPDATE users AS u
+                        SET stars = CASE
+                            WHEN u.user_id = $1 then u.stars - $3
+                            WHEN u.user_id = $2 then u.stars + $3
+                        END
+                        WHERE u.user_id IN ($1, $2)
+                    `,
+                    [
+                        ctx.from?.id,
+                        ctx.message?.reply_to_message?.from?.id,
+                        amount
+                    ]
+                );
+
+                await ctx.reply(
+                    new I18n(
+                        Infrastructure.messages["giveResult"]?.[lang] ?? "Something went wrong",
+                        {
+                            giverId: String(ctx.from?.id),
+                            giverName: ctx.from?.first_name ?? "unknown",
+                            giverOldStars: users.giver_stars,
+                            giverNewStars: String(Number(users.giver_stars) - amount),
+                            amount: String(amount),
+                            receiverId: String(ctx.message?.reply_to_message?.from?.id),
+                            receiverOldStars: users.receiver_stars,
+                            receiverNewStars: String(Number(users.receiver_stars) + amount)
+                        }
+                    ).text
+                );
+            });
         } catch (error) {
             console.error(error);
             await ctx.reply("Something went wrong");
